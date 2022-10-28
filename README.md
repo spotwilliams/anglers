@@ -168,8 +168,6 @@ In the blade
     ->withIsFriendOfUser(Auth::user())
 ```
 
-* First alternative it's to show this info in the view by using the list of friends (eager/lazy loading)
-
 ## 3. Sort by friends first
 
 ```php
@@ -191,6 +189,8 @@ In the blade
 ```
 
 ## 4. Add last trip date
+
+* First alternative it's to show this info in the view by using the list of friends (eager/lazy loading)
 
 ```php
 <div class="w-1/3 px-3 pt-6 pb-3 text-2xl  text-indigo-600 font-semibold">Last Trip</div>
@@ -240,13 +240,13 @@ public function scopeWithLastTripDate($query)
 ```php
 public function scopeWithLastTripLake($query)
 {
-    $query->addSubSelect('last_trip_lake', function ($query) {
-        $query->select('lake')
+    $query->addSelect(['last_trip_lake' =>
+        Trip::query()
+            ->select('lake')
             ->from('trips')
             ->whereColumn('user_id', 'users.id')
             ->latest('went_at')
-            ->limit(1);
-    });
+            ->limit(1)]);
 }
 ```
 
