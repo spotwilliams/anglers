@@ -45,7 +45,6 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'is_friend_of_user' => 'boolean',
     ];
 
     public function club()
