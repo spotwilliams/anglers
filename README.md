@@ -35,7 +35,7 @@ An user should only be able to see people on the same club and also own friends.
 ```php
 public function view(User $user, User $other)
 {
-    return $user->club_id === $other->club_id || $user->buddies->contains($other);
+    return $user->club_id === $other->club_id || $user->friends->contains($other);
 }
 ```
 
@@ -61,7 +61,9 @@ public function scopeVisibleTo($query, User $user)
 {
     $query->where(function ($query) use ($user) {
         $query->where('club_id', $user->club_id)
-            ->orWhereIn('id', $user->friends()->select('friend_id'));
+            ->orWhereIn('id', $user->friends->pluck('id')->toArray());
+//             ->orWhereIn('id', $user->friends()->select('friend_id'));
+
     });
 }
 ```
@@ -89,6 +91,12 @@ distinguish who is a friend and who it's just a member of the same club.
 
 ```
 
+Include in the controller the eager loading call:
+```php
+    ->with('club')
+```
+
+
 * b) A label to mark if user in the list is a friend: this is the same thing but more complex in terms of performance.
 * First approach it's to solve this in the blade.
 
@@ -108,7 +116,7 @@ distinguish who is a friend and who it's just a member of the same club.
 ```php
 /**
  * This can be read as: the friends table has two keys. The user_id key points to the owner of the relation,
- * somethings called parent (who says: this is my list of friends). 
+ * sometimes called parent (who says: this is my list of friends). 
  * And the second key points the the child or the belonged side (who says I am part of the list that belongs to who is identified by the first key)
  */
    public function friends()
@@ -129,7 +137,7 @@ public function scopeWithIsFriendOfUser($query, User $user)
     $query->addSelect([
         'is_friend_of_user' => Friend::query()
             // if count gives us a value bigger than one, it means that that particular row (aka user) is friend of the user (parameter)
-            // buddies [user_id, buddy_id].
+            // friends [user_id, friend_id].
             ->selectRaw('count(1)')
             // if the user is friend (second part of the relation) of ...
             ->whereColumn(first: 'users.id', operator: '=', second: 'friends.friend_id')
@@ -179,7 +187,7 @@ In the blade
 ```
 
 ```php
-->orderByBuddiesFirst(Auth::user())
+->orderByFriendsFirst(Auth::user())
 ```
 
 ## 4. Add last trip date
@@ -287,3 +295,5 @@ public function scopeWithLastTrip($query)
     <span class="text-sm text-gray-600">({{ $user->lastTrip->lake }})</span>
 </div>
 ```
+
+
